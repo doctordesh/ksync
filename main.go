@@ -86,7 +86,7 @@ func main() {
 		return
 	}
 
-	rsyncFromPath := path.Join(config.LocalPath, relativePath)
+	rsyncFromPath := path.Join(config.LocalPath, relativePath) + "/"
 	rsyncToPath := path.Join(config.RemotePath, relativePath)
 
 	var args []string
