@@ -92,7 +92,7 @@ func main() {
 	var args []string
 
 	for _, exclude := range config.Exclude {
-		args = append(args, fmt.Sprintf("--exclude=\"%s\"", exclude))
+		args = append(args, fmt.Sprintf("--exclude=%s", exclude))
 	}
 
 	args = append(
