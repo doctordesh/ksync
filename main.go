@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -20,7 +22,7 @@ type Config struct {
 	Exclude    []string `json:"exclude"`
 }
 
-func getConfig() (Config, error) {
+func getConfig(verbose bool) (Config, error) {
 	var config Config
 	var err error
 
@@ -30,6 +32,11 @@ func getConfig() (Config, error) {
 	}
 
 	configFilePath := filepath.Join(urs.HomeDir, ".ksync")
+
+	if verbose {
+		log.Printf("Reading config file from %s", configFilePath)
+	}
+
 	f, err := os.Open(configFilePath)
 	if err != nil {
 		return config, fmt.Errorf("ERROR: Config file ~/.ksync is missing")
@@ -65,7 +72,13 @@ func getConfig() (Config, error) {
 }
 
 func main() {
-	config, err := getConfig()
+	var verbose bool
+
+	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
+
+	flag.Parse()
+
+	config, err := getConfig(verbose)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -105,8 +118,14 @@ func main() {
 
 	cmd := exec.Command("rsync", args...)
 	cmd.Stderr = os.Stderr
+
+	if verbose {
+		log.Printf("Running: rsync %s", strings.Join(args, " "))
+		cmd.Stdout = os.Stdout
+	}
+
 	err = cmd.Run()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
