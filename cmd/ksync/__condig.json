@@ -1,0 +1,23 @@
+{
+  "verbose": false,
+  "targets": [
+    {
+      "name": "maxiv",
+      "source": "/Users/emiros/Development/MaxIV/",
+      "destination": {
+        "user": "emiros",
+        "host": "w-v-kitslab-cc-0",
+        "path": "/mxn/home/emiros/projects"
+      }
+    },
+    {
+      "name": "eiscat-plopp",
+      "source": "/Users/emiros/Development/EISCAT/",
+      "destination": {
+        "user": "eiscat",
+        "host": "plopp.eiscat3d.se",
+        "path": "/home/eiscat/emil"
+      }
+    }
+  ]
+}

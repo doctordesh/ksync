@@ -1,131 +1,133 @@
-package main
+package ksync
 
-import (
-	"encoding/json"
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"os/exec"
-	"os/user"
-	"path"
-	"path/filepath"
-	"strings"
-)
+// package main
 
-type Config struct {
-	LocalPath  string   `json:"local_path"`
-	RemotePath string   `json:"remote_path"`
-	User       string   `json:"user"`
-	Host       string   `json:"host"`
-	Exclude    []string `json:"exclude"`
-}
+// import (
+// 	"encoding/json"
+// 	"flag"
+// 	"fmt"
+// 	"io/ioutil"
+// 	"log"
+// 	"os"
+// 	"os/exec"
+// 	"os/user"
+// 	"path"
+// 	"path/filepath"
+// 	"strings"
+// )
 
-func getConfig(verbose bool) (Config, error) {
-	var config Config
-	var err error
+// type Config struct {
+// 	LocalPath  string   `json:"local_path"`
+// 	RemotePath string   `json:"remote_path"`
+// 	User       string   `json:"user"`
+// 	Host       string   `json:"host"`
+// 	Exclude    []string `json:"exclude"`
+// }
 
-	urs, err := user.Current()
-	if err != nil {
-		return config, err
-	}
+// func getConfig(verbose bool) (Config, error) {
+// 	var config Config
+// 	var err error
 
-	configFilePath := filepath.Join(urs.HomeDir, ".ksync")
+// 	urs, err := user.Current()
+// 	if err != nil {
+// 		return config, err
+// 	}
 
-	if verbose {
-		log.Printf("Reading config file from %s", configFilePath)
-	}
+// 	configFilePath := filepath.Join(urs.HomeDir, ".ksync")
 
-	f, err := os.Open(configFilePath)
-	if err != nil {
-		return config, fmt.Errorf("ERROR: Config file ~/.ksync is missing")
-	}
+// 	if verbose {
+// 		log.Printf("Reading config file from %s", configFilePath)
+// 	}
 
-	configFile, err := ioutil.ReadAll(f)
-	if err != nil {
-		return config, err
-	}
+// 	f, err := os.Open(configFilePath)
+// 	if err != nil {
+// 		return config, fmt.Errorf("ERROR: Config file ~/.ksync is missing")
+// 	}
 
-	err = json.Unmarshal(configFile, &config)
-	if err != nil {
-		return config, fmt.Errorf("ERROR: ~/.ksync is not well formatted JSON (%s)", err)
-	}
+// 	configFile, err := ioutil.ReadAll(f)
+// 	if err != nil {
+// 		return config, err
+// 	}
 
-	if config.LocalPath == "" {
-		return config, fmt.Errorf("ERROR: Key 'local_path' missing from ~/.ksync config file")
-	}
+// 	err = json.Unmarshal(configFile, &config)
+// 	if err != nil {
+// 		return config, fmt.Errorf("ERROR: ~/.ksync is not well formatted JSON (%s)", err)
+// 	}
 
-	if config.RemotePath == "" {
-		return config, fmt.Errorf("ERROR: Key 'remote_path' missing from ~/.ksync config file")
-	}
+// 	if config.LocalPath == "" {
+// 		return config, fmt.Errorf("ERROR: Key 'local_path' missing from ~/.ksync config file")
+// 	}
 
-	if config.User == "" {
-		return config, fmt.Errorf("ERROR: Key 'user' missing from ~/.ksync config file")
-	}
+// 	if config.RemotePath == "" {
+// 		return config, fmt.Errorf("ERROR: Key 'remote_path' missing from ~/.ksync config file")
+// 	}
 
-	if config.Host == "" {
-		return config, fmt.Errorf("ERROR: Key 'host' missing from ~/.ksync config file")
-	}
+// 	if config.User == "" {
+// 		return config, fmt.Errorf("ERROR: Key 'user' missing from ~/.ksync config file")
+// 	}
 
-	return config, nil
-}
+// 	if config.Host == "" {
+// 		return config, fmt.Errorf("ERROR: Key 'host' missing from ~/.ksync config file")
+// 	}
 
-func main() {
-	var verbose bool
+// 	return config, nil
+// }
 
-	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
+// func main() {
+// 	var verbose bool
 
-	flag.Parse()
+// 	flag.BoolVar(&verbose, "verbose", false, "Verbose output")
 
-	config, err := getConfig(verbose)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+// 	flag.Parse()
 
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+// 	config, err := getConfig(verbose)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
 
-	relativePath, err := filepath.Rel(config.LocalPath, dir)
-	if err != nil {
-		panic(err)
-	}
+// 	dir, err := os.Getwd()
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	if strings.Contains(relativePath, "..") {
-		fmt.Println("ERROR: You're not in the base path")
-		return
-	}
+// 	relativePath, err := filepath.Rel(config.LocalPath, dir)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	rsyncFromPath := path.Join(config.LocalPath, relativePath) + "/"
-	rsyncToPath := path.Join(config.RemotePath, relativePath)
+// 	if strings.Contains(relativePath, "..") {
+// 		fmt.Println("ERROR: You're not in the base path")
+// 		return
+// 	}
 
-	var args []string
+// 	rsyncFromPath := path.Join(config.LocalPath, relativePath) + "/"
+// 	rsyncToPath := path.Join(config.RemotePath, relativePath)
 
-	for _, exclude := range config.Exclude {
-		args = append(args, fmt.Sprintf("--exclude=%s", exclude))
-	}
+// 	var args []string
 
-	args = append(
-		args,
-		"-azP",
-		"--delete",
-		rsyncFromPath,
-		fmt.Sprintf("%s@%s:%s", config.User, config.Host, rsyncToPath),
-	)
+// 	for _, exclude := range config.Exclude {
+// 		args = append(args, fmt.Sprintf("--exclude=%s", exclude))
+// 	}
 
-	cmd := exec.Command("rsync", args...)
-	cmd.Stderr = os.Stderr
+// 	args = append(
+// 		args,
+// 		"-azP",
+// 		"--delete",
+// 		rsyncFromPath,
+// 		fmt.Sprintf("%s@%s:%s", config.User, config.Host, rsyncToPath),
+// 	)
 
-	if verbose {
-		log.Printf("Running: rsync %s", strings.Join(args, " "))
-		cmd.Stdout = os.Stdout
-	}
+// 	cmd := exec.Command("rsync", args...)
+// 	cmd.Stderr = os.Stderr
 
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+// 	if verbose {
+// 		log.Printf("Running: rsync %s", strings.Join(args, " "))
+// 		cmd.Stdout = os.Stdout
+// 	}
+
+// 	err = cmd.Run()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
